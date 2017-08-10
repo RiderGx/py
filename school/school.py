@@ -3,39 +3,49 @@ import json
 import os
 
 class User_data(object):
-    def __init__(self):
+    def __init__(self,name):
         self.name = name
-        self.course = course
 
-    def Authentication(self):
+    def User_Authentication(self):
         if self.name == 'root':
-            return User_data.root_teacher(self)
-        elif self.name == 'root':
-            pass #已经存在的
+            return User_data.Teacher_registration(self)
+        try:
+            username =  open('%s\SH\student\%s.json'%(os.getcwd(),self.name), 'r', encoding='utf-8')
+        except FileNotFoundError:
+            return User_data.Student_registration(self)
         else:
-            pass #新学员
+            pass
 
-    def root_teacher(self):
-        '''设定老师'''
-        if self.course == 'linux' or self.course == 'python':
-            School_bj.tell(self)
-        elif self.course == 'go':
-            School_sh.School_list(self)
-        else:
-            print('学科输入错误')
+    def Teacher_registration(self):
+        '''初始老师'''
+        teacher_name = input('输入教师姓名>>>>>>:').strip()
+        profession = 'teacher'
+        subject = []
+        user_data = {'name': teacher_name, 'prifession': profession, 'subject': subject}
+        SchoolMember(user_data)
 
-
+    def Student_registration(self):
+        '''初始学生'''
+        profession = 'student'
+        subject = []
+        user_data= {'name':self.name,'prifession':profession,'subject':subject}
+        SchoolMember(user_data)
 
 class SchoolMember(object): #学校模板
-    def __init__(self,name,school_class,course):
-        self.name = name
-        self.course = course
-        self.school_class = school_class
+    def __init__(self,user_data):
+        self.name = user_data['name']
+        self.prifession = user_data['prifession']
+        self.subject = user_data['subject']
+        self.user_data = user_data
+        SchoolMember.user_chorice(self)
 
-    def teaching(self):
-        if self.course == 'linux' or self.course == 'python':
+    def user_chorice(self):
+        '''选择学科，通过学科选择学校'''
+        user_chorice_data = input('请输入科目>>>>>:').strip()
+        self.subject.append(user_chorice_data)
+        if user_chorice_data == 'linux' or user_chorice_data == 'python':
             School_bj.tell(self)
-        elif self.course == 'go':
+        elif user_chorice_data == 'go':
             School_sh.School_list(self)
         else:
             print('学科输入错误')
@@ -45,7 +55,7 @@ class SchoolMember(object): #学校模板
             class_list_number = class_list_number.read()
             class_name =  self.course + '-' + class_list_number + '班'
             class_personnel = {'teacher': '','student':[]}
-            with open('%s\%s\%s.json'%(os.getcwd(),add,class_name) , 'w', encoding='utf-8') as class_name_file:
+            with open('%s\%s\class\%s.json'%(os.getcwd(),add,class_name) , 'w', encoding='utf-8') as class_name_file:
                 json.dump(class_personnel,class_name_file)
             class_list_number = int(class_list_number)
             class_list_number += 1
@@ -54,7 +64,7 @@ class SchoolMember(object): #学校模板
                 new_class_list_number.write(class_list_number)
 
     def class_list_add(self,add):
-        path = '%s\%s'%(os.getcwd(),add)
+        path = '%s\%s\class'%(os.getcwd(),add)
         list = []
         for root, dirs, files in os.walk(path):
             for i in files:
@@ -83,25 +93,20 @@ class School_bj(SchoolMember):
 
 class School_sh(SchoolMember):
     '''定义了上海的分校'''
-    add = 'SH'
     def __init__(self):
-        super(School_bj,self).__init__(name,school_class,course)
-        self.add = add
+        super(School_sh,self).__init__(name,prifession,subject,user_data)
 
     def School_list(self):
-        School_sh_list = input('选择查看')
-        if School_sh_list == 'a':
-            return School_sh.creat_class(self,'SH')
-        elif School_sh_list == 'b':
-            return School_sh.class_list_add(self,'SH')
+        if self.prifession == 'teacher':
+            School_sh_list = input('选择查看')
+            if School_sh_list == 'a':
+                return School_sh.creat_class(self,'SH')
+            elif School_sh_list == 'b':
+                return School_sh.class_list_add(self,'SH')
+            else:
+                print(self.user_data)
 
 
-
-
-name = 'a'
-course = input('输入教学学科').strip()
-school_class = ''
-
-
-t1 = SchoolMember(name,school_class,course)
-t1.teaching()
+name = 'root'
+a = User_data(name)
+a.User_Authentication()
