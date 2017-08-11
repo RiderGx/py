@@ -14,20 +14,21 @@ class User_data(object):
         except FileNotFoundError:
             return User_data.Student_registration(self)
         else:
-            pass
+            user_data = json.load(username)
+            SchoolMember(user_data)
 
     def Teacher_registration(self):
         '''初始老师'''
         teacher_name = input('输入教师姓名>>>>>>:').strip()
         profession = 'teacher'
-        subject = []
+        subject = ''
         user_data = {'name': teacher_name, 'prifession': profession, 'subject': subject,'location':''}
         SchoolMember(user_data)
 
     def Student_registration(self):
         '''初始学生'''
         profession = 'student'
-        subject = []
+        subject = {}
         user_data= {'name':self.name,'prifession':profession,'subject':subject,'location':''}
         SchoolMember(user_data)
 
@@ -38,12 +39,18 @@ class SchoolMember(object): #学校模板
         self.subject = user_data['subject']
         self.location = user_data['location']
         self.user_data = user_data
-        SchoolMember.user_chorice(self)
+        if len(self.subject) == 0:
+            SchoolMember.user_chorice(self)
+        else:
+            print(self.user_data)
 
     def user_chorice(self):
         '''选择学科，通过学科选择学校'''
         user_chorice_data = input('请输入学科>>>>>:').strip()
-        self.subject.append(user_chorice_data)
+        if self.prifession == 'student':
+            self.subject[user_chorice_data] = 0
+        else:
+            self.subject = user_chorice_data
         if user_chorice_data == 'linux' or user_chorice_data == 'python':
             School_bj.tell(self)
         elif user_chorice_data == 'go':
@@ -63,8 +70,10 @@ class SchoolMember(object): #学校模板
             class_list_number = str(class_list_number)
             with open('class_number', 'w', encoding='utf-8') as new_class_list_number:
                 new_class_list_number.write(class_list_number)
+            return SchoolMember.class_list_add(self,add)
 
     def class_list_add(self,add):
+        '''查看和加入班级'''
         path = '%s\%s\class'%(os.getcwd(),add)
         list = []
         for root, dirs, files in os.walk(path):
@@ -72,19 +81,22 @@ class SchoolMember(object): #学校模板
                 list.append(i)
         for index, item in enumerate(list,1):
             print(index, item)
-        user_choice = int(input("选择班级加入班主任>>>:"))
-        class_list = list[user_choice]
-        print(class_list)
-        with open('%s\%s\%s'%(path,add,class_list),'r')as class_list_f_r:
-            class_list_name = json.load(class_list_f_r)
-            if self.prifession == 'teacher':
-                class_list_name['teacher'] = self.user_data['name']
-            elif self.prifession ==  'student':
-                class_list_name['student'].append(self.name)
-
-            print(class_list_name)
-            # with open('%s\%s' % (path, class_list), 'w')as class_list_f_w:
-            #     json.dump(class_list_name,class_list_f_w)
+        # print(list)
+        user_choice = int(input("选择班级加入>>>:"))-1
+        try:
+            class_list = list[user_choice]
+        except IndexError:
+            print('输入错误')
+        else:
+            with open('%s\%s'%(path,class_list),'r')as class_list_f_r:
+                class_list_name = json.load(class_list_f_r)
+                if self.prifession == 'teacher':
+                    class_list_name['teacher'] = self.user_data['name']
+                elif self.prifession ==  'student':
+                    class_list_name['student'].append(self.name)
+                print(class_list_name)
+                with open('%s\%s' % (path, class_list), 'w')as class_list_f_w:
+                    json.dump(class_list_name,class_list_f_w)
 
 
 class School_bj(SchoolMember):
@@ -100,25 +112,18 @@ class School_bj(SchoolMember):
 class School_sh(SchoolMember):
     '''定义了上海的分校'''
     def __init__(self):
-        super(School_sh,self).__init__(name,user_data)
-
-
-
+        super(School_sh,self).__init__(name,prifession,subject,user_data)
 
     def School_list(self):
+        self.user_data['location'] = 'SH'
+        with open('%s\\user_database\%s.json' % (os.getcwd(), self.name,), 'w', encoding='utf-8') as student_w:
+            json.dump(self.user_data, student_w)
         if self.prifession == 'teacher':
-            School_sh_techer = input('选择查看')
-            if School_sh_techer == 'a':
-                return School_sh.creat_class(self,'SH')
-            elif School_sh_techer == 'b':
-                return School_sh.class_list_add(self,'SH')
-            else:
-                print(self.user_data)
+            return School_sh.creat_class(self,'SH')
         elif self.prifession == 'student':
-            self.user_data['location'] = 'SH'
-            with open('%s\\user_database\%s.json' % (os.getcwd(), self.name), 'w', encoding='utf-8') as student_w:
-                 json.dump(self.user_data,student_w)
+            return School_sh.class_list_add(self,'SH')
 
-name = 'a'
+
+name = 'root'
 a = User_data(name)
 a.User_Authentication()
