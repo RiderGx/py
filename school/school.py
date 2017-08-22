@@ -15,25 +15,34 @@ class User_data(object):
             except FileNotFoundError:
                 return User_data.Student_registration(self)
             else:
-                # print('判断生效')
                 user_data = json.load(username)
-                SchoolMember(user_data)
+                password = input('输入密码>>>>>:').strip()
+                if self.name == user_data['name'] and password == user_data['password']:
+                    SchoolMember(user_data)
+                else:
+                    print('账号密码错误')
 
     def Teacher_registration(self):
         '''初始老师'''
-        teacher_name = input('输入教师姓名>>>>>>:').strip()
-        profession = 'teacher'
-        subject = ''
-        user_data = {'name': teacher_name, 'profession': profession, 'subject': subject,'location':''}
-        SchoolMember(user_data)
+        while True:
+            teacher_name = input('输入教师姓名>>>>>>:').strip()
+            pasth = ("%s\\user_database\%s.json"%(os.getcwd(),teacher_name))
+            if os.path.exists(pasth) == True:
+                print('账号存在')
+            else:
+                password = input('输入密码>>>>>:').strip()
+                profession = 'teacher'
+                subject = ''
+                user_data = {'name': teacher_name, 'password':password,'profession': profession, 'subject': subject,'location':''}
+                SchoolMember(user_data)
 
     def Student_registration(self):
         '''初始学生'''
+        password = input('输入密码>>>>>:').strip()
         profession = 'student'
         subject = {}
-        user_data= {'name':self.name,'profession':profession,'subject':subject,'location':''}
+        user_data= {'name':self.name,'password':password,'profession':profession,'subject':subject,'location':''}
         SchoolMember(user_data)
-
 
 class SchoolMember(object): #学校模板
     def __init__(self,user_data):
@@ -61,6 +70,7 @@ class SchoolMember(object): #学校模板
                 School_sh.School_list(self)
             else:
                 print('学科输入错误')
+        return User_data.User_Authentication(self)
 
     def creat_class(self,add):
         n = 0
@@ -113,25 +123,32 @@ class SchoolMember(object): #学校模板
 
     def data_inquiry(self,add):
         '''数据查询，查姓名'''
-        # print(self.subject)
-        FindPath = '%s\%s\class\%s' % (os.getcwd(),add,self.subject)
-        FileNames = os.listdir(FindPath)
+        subject = ''
         inquiry = input('输入想查询的职务，1是老师，2是学生>>>>>：')
-        if inquiry == '1':inquiry = 'teacher'
-        elif inquiry == '2':inquiry = 'student'
+        if inquiry == '1':
+            inquiry = 'teacher'
+        elif inquiry == '2':
+            inquiry = 'student'
         else:
             print('输入错误')
-            return SchoolMember.data_inquiry(self,add)
+            return SchoolMember.data_inquiry(self, add)
         data_name = input('输入想查询的姓名>>>>>：')
+        if self.profession == 'teacher':
+            subject = self.subject
+            FindPath = '%s\%s\class\%s' % (os.getcwd(), add, subject)
+            FileNames = os.listdir(FindPath)
+        else:
+            subject = self.subject.keys()
+            for i in subject:
+                FindPath = '%s\%s\class\%s' % (os.getcwd(), add, i)
+                FileNames = os.listdir(FindPath)
+
         for file_name in FileNames:
             fullfilename = os.path.join(FindPath, file_name)
             with open(fullfilename, 'r') as file_name_r:
                 class_data = json.load(file_name_r)
-                list= []
                 for i in class_data:
-                        # print(i,":",class_data[i])
                     if i == inquiry and data_name in class_data[i]:
-                        list.append(fullfilename)
                         fullfilename = fullfilename.split('\\')[-1]
                         fullfile = fullfilename.split('.')[0]
                         print(fullfile)
@@ -148,14 +165,14 @@ class SchoolMember(object): #学校模板
             print('查无此人')
         else:
             username = json.load(username)
-            print(username)
+            # print(username)
             if username['profession'] == 'teacher':
                 print('这个人是老师')
                 return SchoolMember(self)
             if self.subject in username['subject']:
-                print('这是%s的成绩：%s' % (username['subject'], username['subject'][self.subject]))
+                subject = username['subject'][self.subject]
+                print('这是%s的成绩：%s' % (student_name,subject))
                 teacher_modify = input('修改请按Y，不修改请按N')
-
                 if teacher_modify == "y" or teacher_modify == "Y":
                     while True:
                         try:
@@ -164,7 +181,8 @@ class SchoolMember(object): #学校模板
                             print('写数字')
                         else:
                             username['subject'][self.subject] = username_subject_number
-                            print(username)
+                            with open("%s\\user_database\%s.json" % (os.getcwd(),student_name), 'w',encoding='utf-8') as student_w:
+                                json.dump(username,student_w)
                             return SchoolMember.teacher_life(self)
             else:
                 print('这个学生没有你的学科')
@@ -199,10 +217,9 @@ class School_sh(SchoolMember):
 
     def Hello_user(self):
         self.user_data['location'] = 'SH'
-        self.user_data['subject'] = 'go'
-        # print(self.user_data)
+        self.user_data['subject'] = self.subject
         with open("%s\\user_database\%s.json" % (os.getcwd(), self.name,), 'w', encoding='utf-8') as student_w:
-            json.dump(self.user_data, student_w)
+             json.dump(self.user_data, student_w)
         if self.profession == 'teacher':
             print('完成老师注册，请用老师账号登录')
             exit()
@@ -259,7 +276,7 @@ class School_bj(SchoolMember):
 
     def Hello_user(self):
         self.user_data['location'] = 'BJ'
-        print(self.user_data)
+        self.user_data['subject'] = self.subject
         with open("%s\\user_database\%s.json" % (os.getcwd(), self.name,), 'w', encoding='utf-8') as student_w:
             json.dump(self.user_data, student_w)
         if self.profession == 'teacher':
@@ -270,11 +287,10 @@ class School_bj(SchoolMember):
 
     def student_life(self):
         print('欢迎回来[%s]学生，你可以做以下操作' % self.name)
-        print('a是查询你的基本资料，b只查询的成绩，c查询除你以外用户所在班级，随便'
+        print('a是查询你的基本资料，b只查询的成绩，c查询除你以外用户所在班级，e选择其他学科，随便'
               '输入程序结束')
         student_chroice = input('请根据提示输入指令')
         if student_chroice == 'a':
-            print('a')
             for key in self.user_data:
                 print(key,":",self.user_data[key])
             return School_sh.student_life(self)
@@ -283,9 +299,30 @@ class School_bj(SchoolMember):
             return School_sh.student_life(self)
         elif student_chroice == 'c':
             return SchoolMember.data_inquiry(self,'BJ')
+        elif student_chroice == 'e':
+            return School_bj.student_other_subject(self)
         else:
             print('输出错误，程序结束')
             exit()
+
+    def student_other_subject(self):
+        while True:
+            user_new_subject = input('输入想学的新学科').strip()
+            if user_new_subject == 'linux' or user_new_subject == 'python':
+                if user_new_subject in self.subject:
+                    print('科目已经存在')
+                else:
+                    self.subject[user_new_subject] = 0
+                    with open("%s\\user_database\%s.json" % (os.getcwd(), self.name,), 'w',
+                              encoding='utf-8') as student_w:
+                        json.dump(self.user_data, student_w)
+            elif user_new_subject == 'go':
+                print('此不属于我们学校的办理课程')
+            else:
+                print('输入错误')
+        return User_data.User_Authentication(self)
+
+
 
     def teacher_life(self):
         print('欢迎回来[%s]老师，你可以做以下操作' %self.name)
