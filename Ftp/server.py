@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import sys
 import json
 
 
@@ -19,12 +20,46 @@ class Ftp_server(object):
             else:
                 user_data = json.load(user_)
                 if self.name == user_data['username'] and self.passwd == user_data['password']:
-                    return Ftp_user()
-                    return user_data
+                    Ftp_user()
 
                 else:
                     print('账号密码错误')
                     exit()
+
+    def loca_sf(self):
+        print(self.local)
+        list = []
+        for root, dirs, files in os.walk(self.local):
+            if root != self.local:break
+            for name in dirs:
+                if name == self.name:continue
+                else:
+                    list.append(os.path.join(name))
+                    print('\033[1;35;m%s \033[0m'%(os.path.join(name)))
+            for name in files:
+                list.append(os.path.join(name))
+                print('\033[1;31;m%s \033[0m'%(os.path.join(name)))
+        # while True:
+        #     file_input = input("继续文件操作>>>>:").strip()
+        #     if file_input == 'y' or file_input == 'Y':
+        #         return Ftp_server.file_download_operation(self)# 文件操作权限
+        #     else:
+        #         print('输入错误，重新输入')
+
+
+    def file_download_operation(self):
+        file = input('输入要上传或者下载的文件')
+        print('这是要拷贝的地址',self.loca_sf)
+        print('这是要本地路径',self.loca_sf)
+
+        # f1 = open('files', 'r', encoding='utf-8')
+        # f2 = open('files.back', 'w', encoding='utf-8')
+        #
+        # files = f1.read()
+        # f2.write(files)
+        # f1.close()
+        # f2.close()
+
 
 class Ftp_root(Ftp_server):
     def __init__(self):
@@ -50,8 +85,14 @@ class Ftp_root(Ftp_server):
 class Ftp_user(Ftp_server):
     def __init__(self):
         super(Ftp_user,self).__init__(name,passwd)
-        self.user_data = user_data
+        self.local = "%s\%s" % (os.getcwd(),self.name)
+        Ftp_user.Ftp_user_chroice(self)
 
+
+    def Ftp_user_chroice(self):
+        user_chroice = input("输入>>>>>>:")
+        if user_chroice == 'cd':
+            return Ftp_server.loca_sf(self)
 
 name = input('姓名:')
 passwd = input('密码:')
