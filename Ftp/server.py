@@ -39,27 +39,38 @@ class Ftp_server(object):
             for name in files:
                 list.append(os.path.join(name))
                 print('\033[1;31;m%s \033[0m'%(os.path.join(name)))
-        # while True:
-        #     file_input = input("继续文件操作>>>>:").strip()
-        #     if file_input == 'y' or file_input == 'Y':
-        #         return Ftp_server.file_download_operation(self)# 文件操作权限
-        #     else:
-        #         print('输入错误，重新输入')
+        return Ftp_user.Ftp_user_chroice(self)
 
 
-    def file_download_operation(self):
-        file = input('输入要上传或者下载的文件')
-        print('这是要拷贝的地址',self.local)
-        print('这是要本地路径',self.local)
 
-        # f1 = open('files', 'r', encoding='utf-8')
-        # f2 = open('files.back', 'w', encoding='utf-8')
-        #
-        # files = f1.read()
-        # f2.write(files)
-        # f1.close()
-        # f2.close()
+    def file_operation(self,user_chroice):
+        file_operation = input('输入要上传或者下载的文件').strip()
+        source_path = ''
+        destination_path = ''
+        if user_chroice == 'copy':
+            source_path = self.local
+            destination_path = os.getcwd()
+        elif user_chroice == 'upload':
+            source_path = os.getcwd()
+            destination_path = self.local
+        with open("%s\%s"%(source_path,file_operation), 'r', encoding='utf-8') as file:
+            with open('%s\%s'%(destination_path,file_operation), 'w', encoding='utf-8') as file_2:
+                files = file.read()
+                file_2.write(files)
+                file_2.flush()
+        return Ftp_user.Ftp_user_chroice(self)
 
+
+    def file_list(self,user_chroice):
+        user_chroice = user_chroice.strip('cat' + ' ')
+        try:
+            file_read =  open('%s\%s'%(self.local,user_chroice),'r',encoding='utf-8')
+        except FileNotFoundError:
+            print('找不到文件')
+        else:
+            file = file_read.read()
+            print(file)
+        return Ftp_user.Ftp_user_chroice(self)
 
 class Ftp_root(Ftp_server):
     def __init__(self):
@@ -68,7 +79,7 @@ class Ftp_root(Ftp_server):
 
     def print_self(self):
         username = input('输入用户>>>:').strip()
-        path = "%s\\user\%s.json" % (os.getcwd(), username)
+        path = r"%s\user\%s.json" % (os.getcwd(), username)
         locasf = r"\Ftp\%s" % (username)
         self.locasf = locasf
         if os.path.isfile(path) == 'True':
@@ -88,26 +99,34 @@ class Ftp_user(Ftp_server):
         self.local = "%s\%s" % (os.getcwd(),self.name)
         Ftp_user.Ftp_user_chroice(self)
 
-
     def Ftp_user_chroice(self):
-        print(self.local)
         user_chroice = input("输入>>>>>>:")
-        if user_chroice == '1':
+        if user_chroice == 'ls':
             return Ftp_server.loca_sf(self)
-        elif user_chroice == '2':
-            return Ftp_server.file_download_operation(self)
         elif 'cd' in user_chroice:
-            return Ftp_user.path_modification(self,user_chroice)
+            return Ftp_user.path_modify(self,user_chroice)
+        elif user_chroice == 'copy':
+            return Ftp_server.file_operation(self,user_chroice)
+        elif user_chroice == 'upload':
+            return Ftp_server.file_operation(self, user_chroice)
+        elif 'cat' in user_chroice:
+            return Ftp_server.file_list(self,user_chroice)
+        elif user_chroice == 'pwd':
+            print('当前目录：', self.local)
+        return Ftp_user.Ftp_user_chroice(self)
 
 
-    def path_modification(self,user_chroice):
-        user_chroice = user_chroice.strip('cd'+'')
-        self.local = self.local + os.
+    def path_modify(self,user_chroice):
+        user_chroice = user_chroice.strip('cd'+' ')
+        self.local = self.local = "%s\%s" % (self.local,user_chroice)
+        return Ftp_user.Ftp_user_chroice(self)
+
+
+
+
+
 
 name = input('姓名:')
 passwd = input('密码:')
 user = Ftp_server(name,passwd)
 user.User_Authentication()
-
-
-111111111111111111111111
