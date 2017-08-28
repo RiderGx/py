@@ -49,8 +49,8 @@ class Ftp_server(object):
 
     def file_download_operation(self):
         file = input('输入要上传或者下载的文件')
-        print('这是要拷贝的地址',self.loca_sf)
-        print('这是要本地路径',self.loca_sf)
+        print('这是要拷贝的地址',self.local)
+        print('这是要本地路径',self.local)
 
         # f1 = open('files', 'r', encoding='utf-8')
         # f2 = open('files.back', 'w', encoding='utf-8')
@@ -90,9 +90,19 @@ class Ftp_user(Ftp_server):
 
 
     def Ftp_user_chroice(self):
+        print(self.local)
         user_chroice = input("输入>>>>>>:")
-        if user_chroice == 'cd':
+        if user_chroice == '1':
             return Ftp_server.loca_sf(self)
+        elif user_chroice == '2':
+            return Ftp_server.file_download_operation(self)
+        elif 'cd' in user_chroice:
+            return Ftp_user.path_modification(self,user_chroice)
+
+
+    def path_modification(self,user_chroice):
+        user_chroice = user_chroice.strip('cd'+'')
+        self.local = self.local + os.
 
 name = input('姓名:')
 passwd = input('密码:')
