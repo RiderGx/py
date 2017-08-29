@@ -7,8 +7,20 @@ class User_data(object):
         self.name = name
 
     def User_Authentication(self):
+        '''用户认证'''
         if self.name == 'root':
-            return User_data.Teacher_registration(self)
+            password = input('输入管理员密码：').strip()
+            if password == 'root':
+                print('创建班级选1，新增老师选2')
+                while True:
+                        root_input = input('1 or 2:').strip()
+                        if root_input == '1':
+                            print('创建完后按r，可继续创建')
+                            return User_data.root_creat_class(self)
+                        elif root_input == '2':
+                            return User_data.Teacher_registration(self)
+                        else:
+                            continue
         else:
             try:
                 username =  open(r"%s\user_database\%s"%(os.getcwd(),self.name), 'rb')
@@ -21,6 +33,22 @@ class User_data(object):
                     SchoolMember(user_data)
                 else:
                     print('账号密码错误')
+
+    def root_creat_class(self):
+        while True:
+            add = ''
+            subject = input('输入学科,输入q退出程序:').strip()
+            if subject == 'python' or subject == 'linux':
+                add = 'BJ'
+            elif subject == 'go':
+                add = 'SH'
+            elif subject == 'q':
+                exit()
+            else:
+                continue
+            self.subject = subject
+            self.profession = 'root'
+            return SchoolMember.creat_class(self, add)
 
     def Teacher_registration(self):
         '''初始老师'''
@@ -74,6 +102,7 @@ class SchoolMember(object): #学校模板
         return User_data.User_Authentication(self)
 
     def creat_class(self,add):
+        '''创建班级'''
         n = 0
         path = r'%s\%s\class\%s' % (os.getcwd(),add,self.subject)
         for root, a, f in os.walk(path):
@@ -98,8 +127,12 @@ class SchoolMember(object): #学校模板
             print(index, item)
         while True:
             user_choice = input("选择班级加入>>>:")
-            if user_choice == 'q':return  SchoolMember(self)
+            if user_choice == 'r' and self.name == 'root':return User_data.root_creat_class(self)
+            elif user_choice == 'q' and self.name == 'root':exit()
             else:
+                if self.profession == 'root':
+                    print('无法加入')
+                    return User_data.root_creat_class(self)
                 if self.profession == 'student':
                     self.subject[subject] = 0
                 user_choice = int(user_choice)- 1
@@ -160,15 +193,15 @@ class SchoolMember(object): #学校模板
     def subject_modify(self):
         student_name = input("姓名").strip()
         try:
-            username = open(r"%s\user_database\%s.json" % (os.getcwd(), student_name), 'rb')
+            username = open(r"%s\user_database\%s" % (os.getcwd(), student_name), 'rb')
         except FileNotFoundError:
             print('查无此人')
+            return SchoolMember.teacher_life(self)
         else:
             username = pickle.load(username)
-            # print(username)
             if username['profession'] == 'teacher':
                 print('这个人是老师')
-                return SchoolMember(self)
+                return SchoolMember.teacher_life(self)
             if self.subject in username['subject']:
                 subject = username['subject'][self.subject]
                 print('这是%s的成绩：%s' % (student_name,subject))
@@ -179,11 +212,14 @@ class SchoolMember(object): #学校模板
                             username_subject_number = int(input('输入要修改的数字'))
                         except ValueError:
                             print('写数字')
+                            return SchoolMember.teacher_life(self)
                         else:
                             username['subject'][self.subject] = username_subject_number
-                            with open(r"%s\user_database\%s.json" % (os.getcwd(),student_name), 'wb') as student_w:
+                            with open(r"%s\user_database\%s" % (os.getcwd(),student_name), 'wb') as student_w:
                                 pickle.dump(username,student_w)
                             return SchoolMember.teacher_life(self)
+                else:
+                    return SchoolMember.teacher_life(self)
             else:
                 print('这个学生没有你的学科')
                 return SchoolMember.teacher_life(self)
@@ -231,12 +267,14 @@ class School_sh(SchoolMember):
         self.user_data['subject'] = 'go'
 
     def School_list(self):
+        '''上海分校的校园列表'''
         if self.profession == 'teacher':
             return School_sh.creat_class(self,'SH')
         elif self.profession == 'student':
             return School_sh.class_list_add(self,'SH','go')
 
     def Hello_user(self):
+        '''hey，用户，当老师注册完毕后，结束，而学生则直接进入校园生活'''
         self.user_data['location'] = 'SH'
         self.user_data['subject'] = self.subject
         with open(r"%s\user_database\%s" % (os.getcwd(), self.name,), 'wb') as student_w:
@@ -252,32 +290,40 @@ class School_sh(SchoolMember):
             return School_sh.student_life(self)
 
     def student_life(self):
-        print('欢迎回来[%s]学生，你可以做以下操作' % self.name)
-        print('a是查询你的基本资料，b只查询的成绩，c查询除你以外用户所在班级随便'
-              '输入q程序结束')
-        student_chroice = input('请根据提示输入指令')
-        if student_chroice == 'a':
-            print('a')
-            for key in self.user_data:
-                print(key,":",self.user_data[key])
-            return School_sh.student_life(self)
-        elif student_chroice == 'b':
-            print(self.subject)
-            return School_sh.student_life(self)
-        elif student_chroice == 'c':
-            return SchoolMember.data_inquiry(self,'SH')
-        else:
-            exit()
+        '''上海学生的校园生活'''
+        while True:
+            print('欢迎回来[%s]，你可以做以下操作' % self.name)
+            print('a是查询你的基本资料，b只查询的成绩，c查询除你以外用户所在班级,'
+                  '输入q程序结束')
+            student_chroice = input('请根据提示输入指令')
+            if student_chroice == 'a':
+                print('姓名:{0}\t'
+                      '职业:{1}\t'
+                      '学科:{2}\t'
+                      '所在学校:{3}'.format(self.name, self.profession, self.subject, '上海分校'))
+                return School_sh.student_life(self)
+            elif student_chroice == 'b':
+                print(self.subject)
+                return School_sh.student_life(self)
+            elif student_chroice == 'c':
+                return SchoolMember.data_inquiry(self,'SH')
+            elif student_chroice == 'q':
+                exit()
+            else:
+                continue
 
     def teacher_life(self):
+        '''重新登录后的上海老师生活'''
         print('欢迎回来[%s]老师，你可以做以下操作' %self.name)
-        print('a是查询你的基本资料，b修改学生的成绩，c查询除你以外用户所在班级，e查询你上课的班级'
+        print('a是查询你的基本资料，b修改学生的成绩，c查询除你以外用户所在班级，e查询你上课的班级,'
               'f加入一个新的班级，q退出程序')
         while True:
             teacher_chroice = input('请根据提示输入指令')
             if teacher_chroice == 'a':
-                for key in self.user_data:
-                    print(key, ":", self.user_data[key])
+                print('姓名:{0}\t'
+                      '职业:{1}\t'
+                      '学科:{2}\t'
+                      '所在学校:{3}'.format(self.name, self.profession, self.subject, '上海分校'))
                 return School_sh.teacher_life(self)
             elif teacher_chroice == 'b':
                 return School_sh.subject_modify(self)
@@ -303,7 +349,7 @@ class School_bj(SchoolMember):
         if self.profession == 'teacher':
              return School_bj.creat_class(self,'BJ')
         elif self.profession == 'student':
-             return School_sh.class_list_add(self,'BJ',user_chroice)
+             return School_bj.class_list_add(self,'BJ',user_chroice)
 
     def Hello_user(self):
         self.user_data['location'] = 'BJ'
@@ -321,24 +367,29 @@ class School_bj(SchoolMember):
             return SchoolMember.student_life(self)
 
     def student_life(self):
-        print('欢迎回来[%s]学生，你可以做以下操作' % self.name)
-        print('a是查询你的基本资料，b只查询的成绩，c查询除你以外用户所在班级，e选择其他学科，随便'
-              '输入程序结束')
-        student_chroice = input('请根据提示输入指令')
-        if student_chroice == 'a':
-            for key in self.user_data:
-                print(key,":",self.user_data[key])
-            return School_sh.student_life(self)
-        elif student_chroice == 'b':
-            print(self.subject)
-            return School_bj.student_life(self)
-        elif student_chroice == 'c':
-            return SchoolMember.data_inquiry(self,'BJ')
-        elif student_chroice == 'e':
-            return School_bj.student_other_subject(self)
-        else:
-            print('输出错误，程序结束')
-            exit()
+        while True:
+            print('欢迎回来[%s]学生，你可以做以下操作' % self.name)
+            print('a是查询你的基本资料，b只查询的成绩，c查询除你以外用户所在班级，e选择其他学科,'
+                  '输入q程序结束')
+            student_chroice = input('请根据提示输入指令')
+            if student_chroice == 'a':
+                print('姓名:{0}\t'
+                      '职业:{1}\t'
+                      '学科:{2}\t'
+                      '所在学校:{3}'.format(self.name, self.profession, self.subject, '北京分校'))
+                return School_bj.student_life(self)
+            elif student_chroice == 'b':
+                print(self.subject)
+                return School_bj.student_life(self)
+            elif student_chroice == 'c':
+                return SchoolMember.data_inquiry(self,'BJ')
+            elif student_chroice == 'e':
+                return School_bj.student_other_subject(self)
+            elif student_chroice == 'q':
+                print('程序结束')
+                exit()
+            else:
+                continue
 
     def student_other_subject(self):
         while True:
@@ -352,11 +403,13 @@ class School_bj(SchoolMember):
                               ) as student_w:
                         pickle.dump(self.user_data, student_w)
                         student_w.flush()
+                        break
             elif user_new_subject == 'go':
                 print('此不属于我们学校的办理课程')
             else:
                 print('输入错误')
-            return User_data.User_Authentication(self)
+                continue
+        return SchoolMember.class_list_add(self, 'BJ', user_new_subject)
 
 
 
@@ -367,11 +420,14 @@ class School_bj(SchoolMember):
         while True:
             teacher_chroice = input('请根据提示输入指令')
             if teacher_chroice == 'a':
-                for key in self.user_data:
-                    print(key, ":", self.user_data[key])
-                return School_sh.teacher_life(self)
+                if teacher_chroice == 'a':
+                    print('姓名:{0}\t'
+                          '职业:{1}\t'
+                          '学科:{2}\t'
+                          '所在学校:{3}'.format(self.name, self.profession, self.subject,'北京分校'))
+                return School_bj.teacher_life(self)
             elif teacher_chroice == 'b':
-                return School_sh.subject_modify(self)
+                return School_bj.subject_modify(self)
             elif teacher_chroice == 'c':
                 return SchoolMember.data_inquiry(self, 'BJ')
             elif teacher_chroice == 'e':
