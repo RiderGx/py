@@ -9,11 +9,11 @@ class User_data(object):
     def User_Authentication(self):
         '''用户认证'''
         if self.name == 'root':
-            password = input('输入管理员密码：').strip()
+            password = input('输入管理员密码>>>>>：').strip()
             if password == 'root':
                 print('创建班级选1，新增老师选2')
                 while True:
-                        root_input = input('1 or 2:').strip()
+                        root_input = input('1 or 2>>>>:').strip()
                         if root_input == '1':
                             print('创建完后按r，可继续创建')
                             return User_data.root_creat_class(self)
@@ -33,11 +33,12 @@ class User_data(object):
                     SchoolMember(user_data)
                 else:
                     print('账号密码错误')
+                    exit()
 
     def root_creat_class(self):
         while True:
             add = ''
-            subject = input('输入学科,输入q退出程序:').strip()
+            subject = input('输入学科,输入q退出程序>>>>>>:').strip()
             if subject == 'python' or subject == 'linux':
                 add = 'BJ'
             elif subject == 'go':
@@ -171,27 +172,36 @@ class SchoolMember(object): #学校模板
             subject = self.subject
             FindPath = r'%s\%s\class\%s' % (os.getcwd(), add, subject)
             FileNames = os.listdir(FindPath)
+            for file_name in FileNames:
+                fullfilename = os.path.join(FindPath, file_name)
+                with open(fullfilename, 'rb') as file_name_r:
+                    class_data = pickle.load(file_name_r)
+                    for i in class_data:
+                        if i == inquiry and data_name in class_data[i]:
+                            fullfilename = fullfilename.split('\\')[-1]
+                            fullfile = fullfilename.split('.')[0]
+                            print(fullfile)
         else:
             subject = self.subject.keys()
             for i in subject:
                 FindPath = r'%s\%s\class\%s' % (os.getcwd(), add, i)
                 FileNames = os.listdir(FindPath)
-        for file_name in FileNames:
-            fullfilename = os.path.join(FindPath, file_name)
-            with open(fullfilename, 'rb') as file_name_r:
-                class_data = pickle.load(file_name_r)
-                for i in class_data:
-                    if i == inquiry and data_name in class_data[i]:
-                        fullfilename = fullfilename.split('\\')[-1]
-                        fullfile = fullfilename.split('.')[0]
-                        print(fullfile)
+                for file_name in FileNames:
+                    fullfilename = os.path.join(FindPath, file_name)
+                    with open(fullfilename, 'rb') as file_name_r:
+                        class_data = pickle.load(file_name_r)
+                        for i in class_data:
+                            if i == inquiry and data_name in class_data[i]:
+                                fullfilename = fullfilename.split('\\')[-1]
+                                fullfile = fullfilename.split('.')[0]
+                                print(fullfile)
         if self.profession == 'student':
             return SchoolMember.student_life(self)
         elif self.profession == 'teacher':
             return SchoolMember.teacher_life(self)
 
     def subject_modify(self):
-        student_name = input("姓名").strip()
+        student_name = input("姓名>>>>>>>:").strip()
         try:
             username = open(r"%s\user_database\%s" % (os.getcwd(), student_name), 'rb')
         except FileNotFoundError:
@@ -205,11 +215,11 @@ class SchoolMember(object): #学校模板
             if self.subject in username['subject']:
                 subject = username['subject'][self.subject]
                 print('这是%s的成绩：%s' % (student_name,subject))
-                teacher_modify = input('修改请按Y，不修改请按N')
+                teacher_modify = input('修改请按Y，不修改请按N>>>>:')
                 if teacher_modify == "y" or teacher_modify == "Y":
                     while True:
                         try:
-                            username_subject_number = int(input('输入要修改的数字'))
+                            username_subject_number = int(input('输入要修改的数字>>>>>>:'))
                         except ValueError:
                             print('写数字')
                             return SchoolMember.teacher_life(self)
@@ -295,7 +305,7 @@ class School_sh(SchoolMember):
             print('欢迎回来[%s]，你可以做以下操作' % self.name)
             print('a是查询你的基本资料，b只查询的成绩，c查询除你以外用户所在班级,'
                   '输入q程序结束')
-            student_chroice = input('请根据提示输入指令')
+            student_chroice = input('请根据提示输入指令>>>>>>>>:')
             if student_chroice == 'a':
                 print('姓名:{0}\t'
                       '职业:{1}\t'
@@ -318,7 +328,7 @@ class School_sh(SchoolMember):
         print('a是查询你的基本资料，b修改学生的成绩，c查询除你以外用户所在班级，e查询你上课的班级,'
               'f加入一个新的班级，q退出程序')
         while True:
-            teacher_chroice = input('请根据提示输入指令')
+            teacher_chroice = input('请根据提示输入指令>>>>>>>:')
             if teacher_chroice == 'a':
                 print('姓名:{0}\t'
                       '职业:{1}\t'
@@ -371,7 +381,7 @@ class School_bj(SchoolMember):
             print('欢迎回来[%s]学生，你可以做以下操作' % self.name)
             print('a是查询你的基本资料，b只查询的成绩，c查询除你以外用户所在班级，e选择其他学科,'
                   '输入q程序结束')
-            student_chroice = input('请根据提示输入指令')
+            student_chroice = input('请根据提示输入指令>>>>>>>:')
             if student_chroice == 'a':
                 print('姓名:{0}\t'
                       '职业:{1}\t'
@@ -393,7 +403,7 @@ class School_bj(SchoolMember):
 
     def student_other_subject(self):
         while True:
-            user_new_subject = input('输入想学的新学科').strip()
+            user_new_subject = input('输入想学的新学科>>>>>>:').strip()
             if user_new_subject == 'linux' or user_new_subject == 'python':
                 if user_new_subject in self.subject:
                     print('科目已经存在')
@@ -406,9 +416,12 @@ class School_bj(SchoolMember):
                         break
             elif user_new_subject == 'go':
                 print('此不属于我们学校的办理课程')
+            elif user_new_subject == 'q':
+                return School_bj.student_life(self)
             else:
                 print('输入错误')
                 continue
+
         return SchoolMember.class_list_add(self, 'BJ', user_new_subject)
 
 
@@ -418,7 +431,7 @@ class School_bj(SchoolMember):
         print('a是查询你的基本资料，b修改学生的成绩，c查询除你以外用户所在班级，e查询你上课的班级,'
               'f加入一个新的班级，q退出程序')
         while True:
-            teacher_chroice = input('请根据提示输入指令')
+            teacher_chroice = input('请根据提示输入指令>>>>>>>>:')
             if teacher_chroice == 'a':
                 if teacher_chroice == 'a':
                     print('姓名:{0}\t'
