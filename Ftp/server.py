@@ -4,7 +4,7 @@ import json
 
 
 class Ftp_server(object):
-    local = os.getcwd()
+    local = os.getcwd()#本地路径
 
     def __init__(self,name,passwd):
         self.name = name
@@ -16,7 +16,7 @@ class Ftp_server(object):
             Ftp_root()
         else:
             try:
-                user_ =  open("%s\\user\%s.json"%(os.getcwd(),self.name), 'r')
+                user_ =  open(r"%s/user/%s.json"%(os.getcwd(),self.name), 'r')
             except FileNotFoundError:
                 print('用户名不存在')
             else:
@@ -60,8 +60,8 @@ class Ftp_server(object):
             destination_path = self.local
         try:
             file_operation = ''.join(user_chroice)
-            file_1 = open("%s\%s"%(source_path,file_operation), 'r', encoding='utf-8')
-            file_2 = open('%s\%s'%(destination_path,file_operation), 'w', encoding='utf-8')
+            file_1 = open("%s/%s"%(source_path,file_operation), 'r', encoding='utf-8')
+            file_2 = open('%s/%s'%(destination_path,file_operation), 'w', encoding='utf-8')
         except FileNotFoundError:
             print('找不到该文件')
         except PermissionError:
@@ -77,8 +77,9 @@ class Ftp_server(object):
     def file_list(self,user_chroice):
         '''本地文件查看'''
         user_chroice = ''.join(user_chroice)
+
         try:
-            file_read =  open('%s\%s'%(self.local,user_chroice),'r',encoding='utf-8')
+            file_read =  open('%s/%s'%(self.local,user_chroice),'r',encoding='utf-8')
         except FileNotFoundError:
             print('找不到文件')
         else:
@@ -87,9 +88,13 @@ class Ftp_server(object):
         return Ftp_user.Ftp_user_chroice(self)
 
     def user_mkdir(self,user_chroice):
+        '''用户创建文件'''
         mkdir_name = ''.join(user_chroice)
+        list = ['copy', 'upload', 'cd', 'ls', 'mkdir', 'pwd', 'cat']
         if len(user_chroice) == 0:
             print('输入文件夹名字')
+        elif mkdir_name in list:
+            print('不能使用系统名创建文件夹')
         else:
              os.mkdir(mkdir_name)
         return Ftp_user.Ftp_user_chroice(self)
@@ -98,7 +103,7 @@ class Ftp_server(object):
 class Ftp_user(Ftp_server):
     def __init__(self):
         super(Ftp_user,self).__init__(name,passwd)
-        self.local = "%s\%s" % (local,self.name)
+        self.local = r"%s/%s" % (local,self.name)
         os.chdir(self.local)
         Ftp_user.Ftp_user_chroice(self)
 
@@ -123,14 +128,16 @@ class Ftp_user(Ftp_server):
         elif user_chroice[0] == 'mkdir':
             user_chroice.remove('mkdir')
             return Ftp_server.user_mkdir(self,user_chroice)
+        elif user_chroice[0] == 'q':
+            exit()
         return Ftp_user.Ftp_user_chroice(self)
 
 
     def path_modify(self,user_chroice):
         '''路径修改'''
         user_chroice = ''.join(user_chroice)
-        local_path = "%s\%s" % (self.local,user_chroice)
-        initial_path = "%s\%s" % (local,self.name)
+        local_path = r"%s/%s" % (self.local,user_chroice)
+        initial_path = r"%s/%s" % (local,self.name)
         if user_chroice == '..':
             if self.local == initial_path:
                 print('这是根目录')
@@ -167,8 +174,8 @@ class Ftp_root(Ftp_server):
     def print_self(self):
         '''注册新用户'''
         username = input('输入用户>>>:').strip()
-        path = r"%s\user\%s.json" % (os.getcwd(), username)
-        locasf = r"\Ftp\%s" % (username)
+        path = r"%s/user/%s.json" % (os.getcwd(), username)
+        locasf = r"/Ftp/%s" % (username)
         self.locasf = locasf
         if os.path.isfile(path) == 'True':
             print('用户存在')
