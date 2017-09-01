@@ -48,20 +48,24 @@ class Ftp_server(object):
 
     def file_operation(self,user_chroice):
         '''文件操作'''
-        file_operation = input('输入要上传或者下载的文件>>>>>:').strip()
         source_path = ''
         destination_path = ''
-        if user_chroice == 'copy':
+        if user_chroice[0] == 'copy':
+            user_chroice.remove('copy')
             source_path = self.local
             destination_path = local
-        elif user_chroice == 'upload':
+        elif user_chroice[0] == 'upload':
+            user_chroice.remove('upload')
             source_path = local
             destination_path = self.local
         try:
+            file_operation = ''.join(user_chroice)
             file_1 = open("%s\%s"%(source_path,file_operation), 'r', encoding='utf-8')
             file_2 = open('%s\%s'%(destination_path,file_operation), 'w', encoding='utf-8')
         except FileNotFoundError:
             print('找不到该文件')
+        except PermissionError:
+            print('这是一个文件夹，无法被复制')
         else:
              files = file_1.read()
              file_2.write(files)
@@ -72,7 +76,7 @@ class Ftp_server(object):
 
     def file_list(self,user_chroice):
         '''本地文件查看'''
-        user_chroice = user_chroice.strip('cat' + ' ')
+        user_chroice = ''.join(user_chroice)
         try:
             file_read =  open('%s\%s'%(self.local,user_chroice),'r',encoding='utf-8')
         except FileNotFoundError:
@@ -82,34 +86,49 @@ class Ftp_server(object):
             print(file)
         return Ftp_user.Ftp_user_chroice(self)
 
+    def user_mkdir(self,user_chroice):
+        mkdir_name = ''.join(user_chroice)
+        if len(user_chroice) == 0:
+            print('输入文件夹名字')
+        else:
+             os.mkdir(mkdir_name)
+        return Ftp_user.Ftp_user_chroice(self)
+
+
 class Ftp_user(Ftp_server):
     def __init__(self):
         super(Ftp_user,self).__init__(name,passwd)
         self.local = "%s\%s" % (local,self.name)
+        os.chdir(self.local)
         Ftp_user.Ftp_user_chroice(self)
 
     def Ftp_user_chroice(self):
-        print('当前路径',self.local)
         '''用户操作'''
         user_chroice = input("输入>>>>>>:")
-        if user_chroice == 'ls':
+        user_chroice = user_chroice.split()
+        if user_chroice[0] == 'ls':
             return Ftp_server.loca_sf(self)
-        elif 'cd' in user_chroice:
+        elif user_chroice[0] == 'cd':
+            user_chroice.remove('cd')
             return Ftp_user.path_modify(self,user_chroice)
-        elif user_chroice == 'copy':
+        elif user_chroice[0] == 'copy':
             return Ftp_server.file_operation(self,user_chroice)
-        elif user_chroice == 'upload':
+        elif user_chroice[0] == 'upload':
             return Ftp_server.file_operation(self, user_chroice)
-        elif 'cat' in user_chroice:
+        elif user_chroice[0]=='cat':
+            user_chroice.remove('cat')
             return Ftp_server.file_list(self,user_chroice)
-        elif user_chroice == 'pwd':
-            print('当前目录：', self.local)
+        elif user_chroice[0] == 'pwd':
+            print('当前目录：', os.getcwd())
+        elif user_chroice[0] == 'mkdir':
+            user_chroice.remove('mkdir')
+            return Ftp_server.user_mkdir(self,user_chroice)
         return Ftp_user.Ftp_user_chroice(self)
 
 
     def path_modify(self,user_chroice):
         '''路径修改'''
-        user_chroice = user_chroice.strip('cd'+' ')
+        user_chroice = ''.join(user_chroice)
         local_path = "%s\%s" % (self.local,user_chroice)
         initial_path = "%s\%s" % (local,self.name)
         if user_chroice == '..':
@@ -119,7 +138,7 @@ class Ftp_user(Ftp_server):
                 os.chdir(self.local)
                 os.chdir(os.pardir)
                 self.local = os.getcwd()
-        elif os.path.isdir(local) == True:
+        elif os.path.isdir(local_path) == True:
             os.chdir(local_path)
             self.local = os.getcwd()
         else:
@@ -161,8 +180,6 @@ class Ftp_root(Ftp_server):
             with open(path,'w',encoding='utf-8') as user_w:
                 json.dump(user_dict,user_w)
                 exit()
-
-
 
 
 name = input('姓名:')
